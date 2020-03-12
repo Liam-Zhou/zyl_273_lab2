@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`login subcomponent page correctly 1`] = `ReactWrapper {}`;
+
+exports[`render correctly 1`] = `ReactWrapper {}`;
+
+exports[`should render correctly 1`] = `ReactWrapper {}`;
