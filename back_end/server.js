@@ -9,6 +9,25 @@ var session = require('express-session');
 let cors = require("cors"); //  npm install cors
 var config = require('./config/basicConfig');
 var cookieParser = require('cookie-parser');
+const { mongoDB } = require('./config/mongoConfig');
+const mongoose = require('mongoose');
+
+var options = {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    poolSize: 500,
+    bufferMaxEntries: 0
+};
+
+
+mongoose.connect(mongoDB, options, (err, res) => {
+    if (err) {
+        console.log(err);
+        console.log(`MongoDB Connection Failed`);
+    } else {
+        console.log(`MongoDB Connected`);
+    }
+});
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));

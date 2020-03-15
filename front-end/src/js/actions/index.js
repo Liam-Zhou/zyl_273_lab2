@@ -1,4 +1,7 @@
-let updateMessage = (payload) => {
+import f from './sProfileAction'
+
+
+let login = (payload) => {
   console.log("dispatching the action")
   return { type: 'LOGIN', payload };
 }
@@ -15,5 +18,7 @@ let updatebasic = (payload) =>{
   return { type: 'UPDATEBASIC', payload};
 }
 
-
-export  {updateMessage,clearUser,adduser,updatebasic}
+f.login = login;
+console.log('f',f.login)
+export default f;
+//export  {login,clearUser,adduser,updatebasic}

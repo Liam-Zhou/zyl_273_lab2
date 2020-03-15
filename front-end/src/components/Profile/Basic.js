@@ -2,15 +2,15 @@ import React, {Component} from 'react';
 import '../../App.css';
 import axios from 'axios';
 import config from '../../config/basicConfig'
-import fs from 'fs'
-//let fs = require('fs');
-
+//import {getbasic} from '../../js/actions/sProfileAction'
+import f from '../../js/actions/index'
+import { connect } from "react-redux";
 
 let host = config.host;
 let port = config.back_end_port;
 let url = host + ':' + port;
 //Define a Login Component
-class BasicPart extends Component{
+class BasicPart1 extends Component{
     //call the constructor method
     constructor(props){
         super(props);
@@ -73,20 +73,27 @@ class BasicPart extends Component{
             }
         }
 
-        axios.defaults.withCredentials = true;
-        axios.get(getInfoUrl).then(response => {
-            if(response.status === 200){
-                console.log('response.data',response.data)
-                if(response.data){
-                    let userdata = response.data
-                    this.setState({
-                        basic: userdata
-                    })
-                }else{
-                }
-            }else{
+        // axios.defaults.withCredentials = true;
+        // axios.get(getInfoUrl).then(response => {
+        //     if(response.status === 200){
+        //         console.log('response.data',response.data)
+        //         if(response.data){
+        //             let userdata = response.data
+        //             this.setState({
+        //                 basic: userdata
+        //             })
+        //         }else{
+        //         }
+        //     }else{
                 
-            }
+        //     }
+        // })
+
+        this.props.getbasic(getInfoUrl)
+        let basic = this.props.basic
+        console.log('basic',basic)
+        this.setState({
+            basic: basic
         })
     }
 
@@ -354,4 +361,16 @@ render(){
     )
 }
 }
+
+function mapDispatchToProps(dispatch) {
+    return {
+        getbasic: message => dispatch(f.getbasic(message))
+    };
+  }
+const mapStateToProps = state => {
+    console.log('state',state)
+    return { basic: state.profiledata_basic };
+  };
+const BasicPart = connect(mapStateToProps, mapDispatchToProps)(BasicPart1);
+
 export default BasicPart;

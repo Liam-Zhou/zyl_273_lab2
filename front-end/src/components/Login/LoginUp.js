@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
 import '../../App.css';
+//import {login} from '../../js/actions/index'
+import f from '../../js/actions/index'
 import { connect } from "react-redux";
 import axios from 'axios';
 import cookie from 'react-cookies';
@@ -7,55 +9,35 @@ import {Redirect} from 'react-router';
 import config from '../../config/basicConfig'
 
 //Define a Login Component
-class LoginUp extends Component{
+class LoginUp1 extends Component{
     //call the constructor method
     constructor(props){
         //Call the constrictor of Super class i.e The Component
         super(props);
         //const mes = props.location.state
         this.state = {
-            email : "",
-            password : "",
-            role : "",
             message:''
         }
         //Bind the handlers to this class
-        this.emailChangeHandler = this.emailChangeHandler.bind(this);
-        this.passwordChangeHandler = this.passwordChangeHandler.bind(this);
         this.submitLogin = this.submitLogin.bind(this);
-        this.roleChangeHandler = this.roleChangeHandler.bind(this);
     }
     componentWillMount(){
     }
 
-    emailChangeHandler = (e) => {
-        this.setState({
-            email : e.target.value
-        })
-    }
-    //password change handler to update state variable with the text entered by the user
-    passwordChangeHandler = (e) => {
-        this.setState({
-            password : e.target.value
-        })
-    }
-
-    roleChangeHandler = (e) => {
-        this.setState({
-            role : e.target.value
-        })
-    }
     //submit Login handler to send a request to the node backend
     submitLogin = (e) => {
         //prevent page from refresh
         e.preventDefault();
+        let email = e.target.email.value;
+        let password = e.target.password.value;
+        let role = e.target.role.value;
         
-        if(this.state.email && this.state.password && this.state.role){
+        if(email && password && role){
             
             const data = {
-                email : this.state.email,
-                password : this.state.password,
-                role : this.state.role
+                email : email,
+                password : password,
+                role : role
             }
             let host = config.host;
             let port = config.back_end_port;
@@ -73,18 +55,16 @@ class LoginUp extends Component{
                                     message : "no such account!"
                         })
                     }
-                        if(response.data == 'mysql error'){
+                        if(response.data == 'Invalid Credentials'){
                             this.setState({
-                                message : "sorry database error!"
+                                message : "sorry database Invalid Credentials!"
                         })
                     }
                         if(response.data.id){
                             let data = JSON.stringify(response.data)
+                            this.props.login({user:JSON.parse(data)})
                             sessionStorage.setItem('user',data)
                             this.setState({
-                                email : "",
-                                password : "",
-                                role : '',
                                 message : 'success'
                             })
 
@@ -112,9 +92,6 @@ class LoginUp extends Component{
             }
             
         }
-        // if(sessionStorage.getItem('user')){
-        //     redirectVar = <Redirect to= "/"/>
-        // }
         return(
             <div class="loginform">
                         <div>
@@ -122,24 +99,33 @@ class LoginUp extends Component{
                         <div align ="center">
                             <p>Please enter your information</p>
                         </div>
+                        <form onSubmit={this.submitLogin}>
                             <div class="form-group">
-                                <input onChange = {this.emailChangeHandler}  type="text" class="form-control" name="email" placeholder="Email"/>
+                                <input   type="text" class="form-control" name="email" placeholder="Email"/>
                             </div>
                             <div class="form-group">
-                                <input onChange = {this.passwordChangeHandler}  type="password" class="form-control" name="password" placeholder="Password"/>
+                                <input type="password" class="form-control" name="password" placeholder="Password"/>
                             </div>
                             <label class="radio-inline">
-                                <input type="radio" name="role"  onChange={this.roleChangeHandler} value="student"/> student
+                                <input type="radio" name="role"  value="student"/> student
                             </label>
                             <label class="radio-inline">
-                                <input type="radio" name="role"  onChange={this.roleChangeHandler} value="company"/> company
+                                <input type="radio" name="role" value="company"/> company
                             </label>
-                            <button onClick = {this.submitLogin} class="button">Login</button> 
+                            <button  class="button">Login</button> 
+                        </form>
                             </div>  
                             <div><h4>{this.state.message}</h4></div>  
+                            
             </div>            
                             
         )
     }
 }
+function mapDispatchToProps(dispatch) {
+    return {
+        login: data => dispatch(f.login(data))
+    };
+  }
+const LoginUp = connect( null,mapDispatchToProps)(LoginUp1);
 export default LoginUp;
