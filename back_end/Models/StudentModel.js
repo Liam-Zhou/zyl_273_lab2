@@ -12,7 +12,11 @@ var studentSchema = new Schema({
     country:{type: String},
     skills:{type: String},
     phone:{type: String},
-    careerObject:{type: String}
+    careerObject:{type: String},
+    education:{type: Array},
+    work_expe:{type: Array},
+
+
 },
 {
     collection:'student'

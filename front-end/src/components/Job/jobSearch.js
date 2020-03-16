@@ -115,7 +115,7 @@ class jobSearch extends Component{
     }
 
     companyProfile(){
-        let company_id = this.state.job.company_id;
+        let company_id = this.state.job.companyinfo[0]._id;
         this.props.history.push("/cprofile", {
             com_id:company_id
             });
@@ -158,8 +158,8 @@ class jobSearch extends Component{
                     {this.state.joblist.map( (job,index) => (
                     <div class = "education_box" >
                         <button type = "button" style = {{}} onClick = {()=>this.getDetail(job)} class = "glyphicon glyphicon-triangle-right edit-right">detail</button>
-                        <p style = {{}}>ID:<h4 class='inline'>{job.id}</h4></p>
-                        <p style = {{}}>Company Name:<h4 class='inline'>{job.name}</h4></p>
+                        <p style = {{}}>ID:<h4 class='inline'>{job._id}</h4></p>
+                        <p style = {{}}>Company Name:<h4 class='inline'>{job.companyinfo[0].name}</h4></p>
                         <p style = {{}}>Job Title:<h4 class='inline'>{job.jobTitle}</h4></p>
                         <p style = {{}}>Location:<h4 class='inline'>{job.location}</h4></p>
                         <p style = {{}}>Category:<h4 class='inline'>{job.category}</h4></p>
@@ -175,7 +175,7 @@ class jobSearch extends Component{
                 <div class = 'profile_card' style = {{'margin-left': '0px'}}>
                 <h2>Job Detail</h2>
                 <form onSubmit={this.apply}>
-                <p style = {{}}>Company Name:<a class='inline' onClick = {this.companyProfile}>{this.state.job.name}</a></p>
+                <p style = {{}}>Company Name:<a class='inline' onClick = {this.companyProfile}>{this.state.job.companyinfo&&this.state.job.companyinfo[0].name}</a></p>
                 <p style = {{}}>Posting Date:<h4 class='inline'>{this.state.job.postingDate}</h4></p>
                 <p style = {{}}>Deadline:<h4 class='inline'>{this.state.job.deadline}</h4></p>
                 <p style = {{}}>Salary:<h4 class='inline'>{this.state.job.salary}</h4></p>

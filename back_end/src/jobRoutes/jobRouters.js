@@ -4,7 +4,7 @@ let qs = require('qs');
 let fs = require('fs');
 var pool = require('../../config/db');
 let multer=require('multer');
-
+let jobModel = require('../../Models/JobModel')
 
 var createFolder = function(folder){
     try{
@@ -140,67 +140,96 @@ router.get('/searchJob',function(req,res){
     let name = data.name;
     let location = data.location;
     let category = data.category;
-    let Ssql = ''
-    let args = []
+    let match = {
+        $match:{}
+    }
     if(name&&location&&category){
-        name = '%'+name+'%';
-        Ssql = 'select * from company  inner join job on job.company_id=company.id where (jobTitle like ? or name like ?) and location = ? and category = ? ';
-        args.push(name);args.push(name);args.push(location);args.push(category);
+        name = new RegExp(name, 'i');
+        match = {
+            $match:{
+                $or:[{'jobTitle':name},{'companyinfo.name':name}],
+                'location':location,
+                'category':category
+            }
+        }
     }
     if(name&&!location&&!category){
-        name = '%'+name+'%';
-        Ssql = 'select * from company inner join job on job.company_id=company.id where (jobTitle like ? or name like?) ';
-        args.push(name);args.push(name);
+        name = new RegExp(name, 'i');
+        match = {
+            $match:{
+                $or:[{'jobTitle':name},{'companyinfo.name':name}]
+            }
+        }
     }
     if(!name&&location&&!category){
-        Ssql = 'select * from company inner join job on job.company_id=company.id where location = ? ';
-        args.push(location);
+        match = {
+            $match:{
+                'location':location
+            }
+        }
     }
     if(!name&&!location&&category){
-        Ssql = 'select * from company inner join job on job.company_id=company.id where category = ? ';
-        args.push(category);
+        match = {
+            $match:{
+                'category':category
+            }
+        }
     }
     if(!name&&location&&category){
-        Ssql = 'select * from company  inner join job on job.company_id=company.id where location = ? and category = ?';
-        args.push(location);args.push(category);
+        match = {
+            $match:{
+                'location':location,
+                'category':category
+            }
+        }
     }
     if(name&&location&&!category){
-        name = '%'+name+'%';
-        Ssql = 'select * from company inner join job on job.company_id=company.id where (jobTitle like ? or name like ?) and location = ?';
-        args.push(name);args.push(name);args.push(location);
+        name = new RegExp(name, 'i');
+        match = {
+            $match:{
+                $or:[{'jobTitle':name},{'companyinfo.name':name}],
+                'location':location
+            }
+        }
     }
     if(name&&!location&&category){
-        name = '%'+name+'%';
-        Ssql = 'select * from company  inner join job on job.company_id=company.id where (jobTitle like ? or name like ?) and category = ?';
-        args.push(name);args.push(name);args.push(category);
+        name = new RegExp(name, 'i');
+        match = {
+            $match:{
+                $or:[{'jobTitle':name},{'companyinfo.name':name}],
+                'category':category
+            }
+        }
     }
     if(!name&&!location&&!category){
-        Ssql = 'select * from  company inner join job on job.company_id=company.id';
     }
 
+    let lookup = {
+        $lookup:
+          {
+            from: "company",
+            localField: "company_id",
+            foreignField: "_id",
+            as: "companyinfo"
+          }
+     };
+    
+    jobModel.aggregate([lookup,match],(error, joblist)=>{
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+        }
+        if (joblist) {
+            res.json(joblist);
+        }
+        else {
+            res.end("no job list");
+        }
 
+    })
 
-
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(Ssql,args,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                    let jobList = result;
-                    conn.release();
-                    res.json(jobList);
-                
-                
-            }})
-        }})
 })
 router.post('/applyJob',Fupload.single('file'),function(req,res){
     let data = req.body;

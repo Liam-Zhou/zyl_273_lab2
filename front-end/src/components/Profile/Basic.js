@@ -73,28 +73,28 @@ class BasicPart1 extends Component{
             }
         }
 
-        // axios.defaults.withCredentials = true;
-        // axios.get(getInfoUrl).then(response => {
-        //     if(response.status === 200){
-        //         console.log('response.data',response.data)
-        //         if(response.data){
-        //             let userdata = response.data
-        //             this.setState({
-        //                 basic: userdata
-        //             })
-        //         }else{
-        //         }
-        //     }else{
+        axios.defaults.withCredentials = true;
+        axios.get(getInfoUrl).then(response => {
+            if(response.status === 200){
+                console.log('response.data',response.data)
+                if(response.data){
+                    let userdata = response.data
+                    this.setState({
+                        basic: userdata
+                    })
+                }else{
+                }
+            }else{
                 
-        //     }
-        // })
-
-        this.props.getbasic(getInfoUrl)
-        let basic = this.props.basic
-        console.log('basic',basic)
-        this.setState({
-            basic: basic
+            }
         })
+
+        // this.props.getbasic(getInfoUrl)
+        // let basic = this.props.basic
+        // console.log('basic',basic)
+        // this.setState({
+        //     basic: basic
+        // })
     }
 
     basicInfoEdit(){
@@ -273,7 +273,6 @@ render(){
        skills = s.split(",");
     }
     let n = this.state.id;
-    n = Number(n);
     let img = require(`../../img/user/${n}`);
 
     return(

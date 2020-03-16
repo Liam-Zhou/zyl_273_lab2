@@ -50,14 +50,9 @@ class LoginUp1 extends Component{
                     console.log("Status Code : ",response.status);
                     if(response.status === 200){
                         console.log('response.data',response.data)
-                        if(response.data == 'noinfo'){
-                                this.setState({
-                                    message : "no such account!"
-                        })
-                    }
                         if(response.data == 'Invalid Credentials'){
                             this.setState({
-                                message : "sorry database Invalid Credentials!"
+                                message : "no such account!"
                         })
                     }
                         if(response.data.id){

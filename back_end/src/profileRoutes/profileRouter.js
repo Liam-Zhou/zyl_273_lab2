@@ -1,10 +1,10 @@
 var express = require('express');
 var router = express.Router();
-let qs = require('qs');
 var pool = require('../../config/db');
 let fs = require('fs');
-var path = require("path")
 let multer=require('multer');
+let Student = require('../../Models/StudentModel')
+let Company = require('../../Models/CompanyModel')
 
 
 var createFolder = function(folder){
@@ -110,25 +110,33 @@ router.post('/StudentcontactInfo',function(req,res){
 router.get('/getStuBasicInfo',function(req,res){
     let data = req.query;
     let id = data.id;
-    id = Number(id);
-    let Ssql = 'select * from student where id = ' + id;
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let basicInfo = result[0];
-                conn.release();
-                res.json(basicInfo);
-            }
-})}})
+    let returnField = {
+        name:1,
+        email:1,
+        collegeName:1,
+        birth:1,
+        city:1,
+        state:1,
+        country:1,
+        skills:1,
+        phone:1,
+        careerObject:1,
+    }
+    Student.findOne({ _id: id},returnField, (error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+        }
+        if (result) {
+            console.log('result',result)
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    }); 
 })
 
 // about student profile education part
@@ -352,7 +360,6 @@ router.get('/getComBasicInfo',function(req,res){
             }
 })}})
 })
-
 
 router.put('/updatecomcontact',function(req,res){
     let data = req.body;
