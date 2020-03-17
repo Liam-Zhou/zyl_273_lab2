@@ -76,7 +76,7 @@ class BasicPart1 extends Component{
         axios.defaults.withCredentials = true;
         axios.get(getInfoUrl).then(response => {
             if(response.status === 200){
-                console.log('response.data',response.data)
+                //console.log('response.data',response.data)
                 if(response.data){
                     let userdata = response.data
                     this.setState({
@@ -146,7 +146,7 @@ class BasicPart1 extends Component{
         let file = e.target.avatar.files[0]
         console.log('file',file)
         let paramdata = {
-            id: this.state.basic.id,
+            id: this.state.basic._id,
             avatar: e.target.avatar.files[0],
             name: e.target.name.value,
             dateOfBirth: e.target.dateOfBirth.value,
@@ -201,7 +201,7 @@ class BasicPart1 extends Component{
     handleSkillSubmit(e){
         e.preventDefault();
         let skills = e.target.skills.value;
-        let id = this.state.basic.id;
+        let id = this.state.basic._id;
         let paramdata = {
             skills : skills,
             id : id
@@ -235,7 +235,7 @@ class BasicPart1 extends Component{
         let phone = e.target.phone.value;
         let email = e.target.email.value;
 
-        let id = this.state.basic.id;
+        let id = this.state.basic._id;
         let paramdata = {
             phone : phone,
             email : email,

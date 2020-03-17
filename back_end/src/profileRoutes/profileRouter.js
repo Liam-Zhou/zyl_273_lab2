@@ -33,79 +33,77 @@ var upload = multer({ storage: storage })
 //about student profile basic part    
 router.post('/StudentbasicInfo',upload.single('avatar'),function(req,res){
     let data = req.body;
-
-    let updateSql = 'update student SET name=?,birth=?,city=?,state=?,country=?,careerObject=? WHERE id=?'
-    let args = [];
-    args.push(data.name);args.push(data.dateOfBirth);
-    args.push(data.city);args.push(data.state);
-    args.push(data.country);args.push(data.carrerObj);args.push(data.id);
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
+    let set = {
+        $set : {
+            'name':data.name,
+            'birth':data.dateOfBirth,
+            'city':data.city,
+            'state':data.state,
+            'country':data.country,
+            'careerObject':data.carrerObj
             }
-        });
-    }})
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return
+        }
+        if (result) {
+            console.log('result basic info',result)
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+    
+
 })
 router.post('/StudentSkillsInfo',function(req,res){
     let data = req.body;
-    let updateSql = 'update student SET skills=? WHERE id=?'
-    let args = [];
-    args.push(data.skills);args.push(data.id);
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    let set = {
+        $set : {'skills':data.skills}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error skill')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
-    }})
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
 })
 router.post('/StudentcontactInfo',function(req,res){
     let data = req.body;
-    let updateSql = 'update student SET phone=?, email=? WHERE id=?'
-    let args = [];
-    args.push(data.phone);args.push(data.email);args.push(data.id);
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
+    let set = {
+        $set : {'phone':data.phone,'email':data.email}
     }
-})
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
 })
 router.get('/getStuBasicInfo',function(req,res){
     let data = req.query;
@@ -128,9 +126,9 @@ router.get('/getStuBasicInfo',function(req,res){
                 'Content-Type': 'text/plain'
             })
             res.end("Error Occured");
+            return
         }
         if (result) {
-            console.log('result',result)
             res.json(result);
         }
         else {
@@ -143,198 +141,221 @@ router.get('/getStuBasicInfo',function(req,res){
 router.get('/getStuEduInfo',function(req,res){
     let data = req.query;
     let id = data.id;
-    let Ssql = 'select * from education where student_id = ' + Number(id);
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    let returnField = {
+        education:1,
+    }
+    Student.findOne({ _id: id},returnField, (error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let basicInfo = result;
-                conn.release();
-                res.json(basicInfo);
-            }
-})}})
+        }
+        if (result) {
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    }); 
 })
 router.post('/addStudentEdu',function(req,res){
     let data = req.body;
-    let addSql = 'insert into education (student_id,collegeName,location,degree,major,passingYear,cGPA) values (?,?,?,?,?,?,?)'
-    let args = [];
-    args.push(data.id);args.push(data.collegeName);
-    args.push(data.location);args.push(data.degree);
-    args.push(data.major);args.push(data.passingyear);args.push(data.cgpa);
+    let edu = {
+        "collegeName" : data.collegeName,
+        "location" : data.location,
+        "degree" : data.degree,
+        "major" : data.major,
+        "passingYear" : data.passingyear,
+        "cGPA" : data.cgpa
+    }
+    let set = {
+        $addToSet : {'education':edu}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return;
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(addSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[ADD ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
-    }})
+    
 })
 router.put('/updateStuEdu',function(req,res){
     let data = req.body;
-    let updateSql = 'update education SET collegeName=?,location=?,degree=?,major=?,passingYear=?,cGPA=? WHERE id=?'
-    let args = [];
-    args.push(data.collegename);args.push(data.location);args.push(data.degree);
-    args.push(data.major);args.push(data.passingyear);
-    args.push(data.cgpa);args.push(data.eduid);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    let edu = {
+        "collegeName" : data.collegename,
+        "location" : data.location,
+        "degree" : data.degree,
+        "major" : data.major,
+        "passingYear" : data.passingyear,
+        "cGPA" : data.cgpa
+    }
+    let edu_index = 'education.'+data.index
+    let set = {
+        $set : {[edu_index]:edu}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
-    }})
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+   
 })
-router.delete('/deleteStuEdu',function(req,res){
-    let dSql = 'delete from education where id=?;'
-    let edu_id = req.query.id;
-    edu_id = Number(edu_id)
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+router.post('/deleteStuEdu',function(req,res){
+    let data = req.body;
+    let set = {
+        $pull : {'education':data.edu}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-            conn.query(dSql,edu_id,function(qerr,result){
-                if(qerr){
-                    console.log('[DELETE ERROR] - ',qerr.message);
-                    conn.release();
-                    res.json('mysql delete error ')
-                    return
-                }else{
-                    conn.release();
-                    res.json('success');
-                }
-            });
-        }})
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+    
 })
 
 //about student profile work experience part
 router.post('/addStuWork',function(req,res){
     let data = req.body;
-    let addSql = 'insert into work_experience (student_id,companyName,title,location,startDate,endDate,description) values (?,?,?,?,?,?,?)'
-    let args = [];
-    args.push(data.id);args.push(data.companyName);
-    args.push(data.title);args.push(data.location);
-    args.push(data.startdate);args.push(data.enddate);args.push(data.des);
+    let work_expe = {
+        "companyName" : data.companyName,
+        "title" : data.title,
+        "location" : data.location,
+        "startDate" : data.startdate,
+        "endDate" : data.enddate,
+        "description" : data.des
+    }
+    let set = {
+        $addToSet : {'work_expe':work_expe}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return;
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(addSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[ADD ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql add error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
-    }})
 })
 router.get('/getStuWorkInfo',function(req,res){
     let data = req.query;
     let id = data.id;
-    let Ssql = 'select * from work_experience where student_id = ' + Number(id);
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    let returnField = {
+        work_expe:1,
+    }
+    Student.findOne({ _id: id},returnField, (error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error')
-                return
-            }else{
-                let basicInfo = result;
-                conn.release();
-                res.json(basicInfo);
-            }
-})}})
+        }
+        if (result) {
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    }); 
 })
 router.put('/updateStuWork',function(req,res){
     let data = req.body;
-    let updateSql = 'update work_experience SET companyName=?,location=?,title=?,startDate=?,endDate=?,description=? WHERE id=?'
-    let args = [];
-    args.push(data.companyname);args.push(data.location);args.push(data.title);
-    args.push(data.startdate);args.push(data.enddate);
-    args.push(data.des);args.push(data.workid);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    let work = {
+        "companyName" : data.companyname,
+        "title" : data.title,
+        "location" : data.location,
+        "startDate" : data.startdate,
+        "endDate" : data.enddate,
+        "description" : data.des
+    }
+    let work_index = 'work_expe.'+data.index
+    let set = {
+        $set : {[work_index]:work}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
-            }
-        });
-    }})
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+   
 })
-router.delete('/deleteStuWork',function(req,res){
-    let dSql = 'delete from work_experience where id=?;'
-    let work_id = req.query.id;
-    work_id = Number(work_id)
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+router.post('/deleteStuWork',function(req,res){
+    let data = req.body;
+    let set = {
+        $pull : {'work_expe':data.work_expe}
+    }
+    Student.updateOne({_id:data.id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-            conn.query(dSql,work_id,function(qerr,result){
-                if(qerr){
-                    console.log('[DELETE ERROR] - ',qerr.message);
-                    conn.release();
-                    res.json('mysql delete error ')
-                    return
-                }else{
-                    conn.release();
-                    res.json('success');
-                }
-            });
-        }})
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+    
 })
 
 //about company basic information

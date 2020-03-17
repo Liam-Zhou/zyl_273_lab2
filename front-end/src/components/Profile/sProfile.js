@@ -42,11 +42,11 @@ class Profile extends Component{
             <div class="col-md-8">
 
             {/* education section */}
-            {/* <EducationPart stu_id={this.state.stu_id}/> */}
+            <EducationPart stu_id={this.state.stu_id}/>
 
             {/* work experience section */}
 
-            {/* <WorkPart stu_id={this.state.stu_id}/> */}
+            <WorkPart stu_id={this.state.stu_id}/>
                 
             </div>
 

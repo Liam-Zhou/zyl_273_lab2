@@ -19,6 +19,8 @@ class WorkPart extends Component{
             edit_style:[],
             index_now:null,
 
+            stu_id:'',
+
             listlength:[],
 
             showbutton:'block',
@@ -62,7 +64,7 @@ class WorkPart extends Component{
                  if(response.status === 200){
                      console.log('response.data',response.data)
                      if(response.data){
-                         let experiences = response.data;
+                         let experiences = response.data.work_expe;
                          let length = experiences.length;
                          let read = [];let edit = [];
                          for(let i = 0; i<length; i++){
@@ -72,7 +74,8 @@ class WorkPart extends Component{
                          this.setState({
                             worklist: experiences,
                             read_style: read,
-                            edit_style: edit
+                            edit_style: edit,
+                            stu_id:response.data._id,
                          })
                          
                      }else{
@@ -89,7 +92,8 @@ class WorkPart extends Component{
         let index = this.state.index_now;
 
         let paramdata = {
-            workid: e.target['id'+index].value,
+            id:this.state.stu_id,
+            index:index,
             companyname: e.target['name'+index].value,
             location: e.target['location'+index].value,
             title: e.target['title'+index].value,
@@ -146,9 +150,18 @@ class WorkPart extends Component{
             index_now:null,
         })
     }
-    delete(id){
+    delete(e){
+        e.preventDefault();
+        let index = this.state.index_now;
+        let work_expe = this.state.worklist[index];
+
+        let paramdata = {
+            id:this.state.stu_id,
+            work_expe:work_expe
+        }
+
         axios.defaults.withCredentials = true;
-        axios.delete(url + '/profile/deleteStuWork?id='+id)
+        axios.post(url + '/profile/deleteStuWork',paramdata)
             .then(response => {
                 if(response.status === 200){
                     console.log('response.data',response.data)
@@ -166,9 +179,8 @@ class WorkPart extends Component{
     
     submit(e){
         e.preventDefault();
-        let user =  JSON.parse(sessionStorage.getItem('user'));
         let param = {
-            id:user.id,
+            id:this.state.stu_id,
             companyName:e.target.name.value,
             location:e.target.location.value,
             title: e.target.title.value,
@@ -224,8 +236,7 @@ class WorkPart extends Component{
                     <div class = "education_box" id = {index}>
                         <form onSubmit={this.update}>
                         <button type = "button" style = {{'display':this.state.showbutton}} onClick = {()=>this.InfoEdit(index)} class = "glyphicon glyphicon-edit edit-right"></button>
-                        <p style = {{'display':this.state.read_style[index]}}>ID:<h4 class='inline'>{work.id}</h4></p>
-                        <p style = {{'display':this.state.edit_style[index]}}>ID:<input type="text"  name={"id"+(index)} defaultValue={work.id}  disabled/></p>
+                        <p style = {{'display':this.state.read_style[index]}}>index:<h4 class='inline'>{index}</h4></p>
                        
                         <p style = {{'display':this.state.read_style[index]}}>Company Name:<h4 class='inline'>{work.companyName}</h4></p>
                         <p style = {{'display':this.state.edit_style[index]}}>Company Name: <input type="text" class="" name={"name"+(index)} defaultValue={work.companyName}/></p>
@@ -249,7 +260,7 @@ class WorkPart extends Component{
                     <div class='img' style = {{'display':this.state.edit_style[index],'margin-bottom':'10px'}}>
                         <button type="submit" class='btn btn-success'>update</button>
                         <button type="reset" style = {{'margin-left':'40px'}} onClick = {()=>this.cancel(index)} class='btn btn-info'>cancel</button>
-                        <button type="button" style = {{'margin-left':'40px'}} class='btn btn-danger' onClick = {()=>this.delete(work.id)}>delete</button>
+                        <button type="button" style = {{'margin-left':'40px'}} class='btn btn-danger' onClick = {this.delete}>delete</button>
                     </div>
                     <p >{this.state.updateWorkMessage}</p>
                     </form>

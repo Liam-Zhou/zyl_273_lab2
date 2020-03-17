@@ -18,6 +18,8 @@ class EducationPart extends Component{
             edit_style:[],
             index_now:null,
 
+            stu_id:'',
+
             listlength:[],
 
             showadd:'block',
@@ -50,7 +52,7 @@ class EducationPart extends Component{
             if(sessionStorage.getItem('user')){
                 user =  JSON.parse(sessionStorage.getItem('user'));
                 getInfoUrl = url + '/profile/getStuEduInfo?id='+user.id
-           }
+            }
         }
      axios.defaults.withCredentials = true;
      axios.get(getInfoUrl)
@@ -58,7 +60,7 @@ class EducationPart extends Component{
          if(response.status === 200){
              console.log('response.data',response.data)
              if(response.data){
-                 let educations = response.data;
+                 let educations = response.data.education;
                  let length = educations.length;
                  let read = [];let edit = [];
                  for(let i = 0; i<length; i++){
@@ -68,7 +70,8 @@ class EducationPart extends Component{
                  this.setState({
                     educationlist: educations,
                     read_style: read,
-                    edit_style: edit
+                    edit_style: edit,
+                    stu_id:response.data._id
                  })
                  
              }else{
@@ -126,10 +129,9 @@ class EducationPart extends Component{
     }
     submit(e){
         e.preventDefault();
-        let user =  JSON.parse(sessionStorage.getItem('user'));
 
         let param = {
-            id:user.id,
+            id:this.state.stu_id,
             collegeName:e.target.name.value,
             location:e.target.location.value,
             degree: e.target.degree.value,
@@ -161,9 +163,19 @@ class EducationPart extends Component{
 
 
     }
-    delete(eduid){
+    delete(e){
+
+        e.preventDefault();
+        let index = this.state.index_now;
+        let edu = this.state.educationlist[index];
+
+        let paramdata = {
+            id:this.state.stu_id,
+            edu:edu
+        }
+
         axios.defaults.withCredentials = true;
-        axios.delete(url + '/profile/deleteStuEdu?id='+eduid)
+        axios.post(url + '/profile/deleteStuEdu',paramdata)
             .then(response => {
                 if(response.status === 200){
                     console.log('response.data',response.data)
@@ -182,7 +194,7 @@ class EducationPart extends Component{
         let index = this.state.index_now;
 
         let paramdata = {
-            eduid: e.target['id'+index].value,
+            id:this.state.stu_id,
             collegename: e.target['name'+index].value,
             location: e.target['location'+index].value,
             degree: e.target['degree'+index].value,
@@ -218,8 +230,7 @@ class EducationPart extends Component{
                     <div class = "education_box" id = {index}>
                         <form onSubmit={this.update}>
                         <button type = "button" style = {{'display':this.state.showbutton}} onClick = {()=>this.InfoEdit(index)} class = "glyphicon glyphicon-edit edit-right"></button>
-                        <p style = {{'display':this.state.read_style[index]}}>ID:<h4 class='inline'>{education.id}</h4></p>
-                        <p style = {{'display':this.state.edit_style[index]}}>ID:<input type="text"  name={"id"+(index)} defaultValue={education.id}  disabled/></p>
+                        <p style = {{'display':this.state.read_style[index]}}>index:<h4 class='inline'>{index}</h4></p>
                        
                         <p style = {{'display':this.state.read_style[index]}}>College Name:<h4 class='inline'>{education.collegeName}</h4></p>
                         <p style = {{'display':this.state.edit_style[index]}}>College Name: <input type="text" class="" name={"name"+(index)} defaultValue={education.collegeName}/></p>
@@ -252,7 +263,7 @@ class EducationPart extends Component{
                     <div class='img' style = {{'display':this.state.edit_style[index],'margin-bottom':'10px'}}>
                         <button type="submit" class='btn btn-success'>update</button>
                         <button type="reset" style = {{'margin-left':'40px'}} onClick = {()=>this.cancel(index)} class='btn btn-info'>cancel</button>
-                        <button type="button" style = {{'margin-left':'40px'}} class='btn btn-danger' onClick = {()=>this.delete(education.id)}>delete</button>
+                        <button type="button" style = {{'margin-left':'40px'}} class='btn btn-danger' onClick = {this.delete}>delete</button>
                     </div>
                     <p >{this.state.updateEduMessage}</p>
                     </form>
