@@ -136,8 +136,8 @@ class viewJob extends Component{
                     <h2>Posted Jobs</h2>
                     {this.state.joblist.map( (job,index) => (
                     <div class = "education_box" >
-                        <button type = "button" style = {{}} onClick = {()=>this.getStulist(job.id)} class = "glyphicon glyphicon-triangle-right edit-right">studentlist</button>
-                        <p style = {{}}>ID:<h4 class='inline'>{job.id}</h4></p>
+                        <button type = "button" style = {{}} onClick = {()=>this.getStulist(job._id)} class = "glyphicon glyphicon-triangle-right edit-right">studentlist</button>
+                        <p style = {{}}>ID:<h4 class='inline'>{job._id}</h4></p>
                         
                         <p style = {{}}>Job Title:<h4 class='inline'>{job.jobTitle}</h4></p>
                         

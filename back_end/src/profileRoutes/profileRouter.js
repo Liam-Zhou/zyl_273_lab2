@@ -362,49 +362,49 @@ router.post('/deleteStuWork',function(req,res){
 router.get('/getComBasicInfo',function(req,res){
     let data = req.query;
     let id = data.id;
-    let Ssql = 'select * from company where id = ' + Number(id);
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    
+    Company.findOne({ _id: id}, (error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let basicInfo = result[0];
-                conn.release();
-                res.json(basicInfo);
-            }
-})}})
+        }
+        if (result) {
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    }); 
+    
 })
 
 router.put('/updatecomcontact',function(req,res){
     let data = req.body;
-    let updateSql = 'update company SET phone=?,email=? WHERE id=?'
-    let args = [];
-    args.push(data.phone);args.push(data.email);args.push(data.id);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
+    let set = {
+        $set : {
+            'phone':data.phone,
+            'email':data.email
             }
-        });
-    }})
+        }
+    Company.updateOne({ _id: data.id},set,(error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    }); 
 })
 
 

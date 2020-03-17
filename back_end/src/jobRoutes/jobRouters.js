@@ -5,6 +5,7 @@ let fs = require('fs');
 var pool = require('../../config/db');
 let multer=require('multer');
 let jobModel = require('../../Models/JobModel')
+let Company = require('../../Models/CompanyModel')
 
 var createFolder = function(folder){
     try{
@@ -54,32 +55,39 @@ var Fstorage = multer.diskStorage({
 var Fupload = multer({ storage: Fstorage })
 
 
-
+//company profile basic data,picture
 router.post('/updatecombasic',upload.single('avatar'),function(req,res){
     let data = req.body;
-    let updateSql = 'update company SET name=?,location=?,description=? WHERE id=?'
     let args = [];
     args.push(data.name);args.push(data.location);
     args.push(data.des);args.push(data.id);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(updateSql,args,function(qerr,result){
-            if(qerr){
-                console.log('[UPDATE ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql update error ')
-                return
-            }else{
-                conn.release();
-                res.json('success');
+    let set = {
+        $set : {
+            'name':data.name,
+            'location':data.location,
+            'description':data.des
             }
-        });
-    }})
+    }
+    Company.updateOne({_id:data.id},set,(error,result)=>{
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+    
 })
+
 
 router.post('/addJob',function(req,res){
     let data = req.body;
@@ -115,24 +123,21 @@ router.post('/addJob',function(req,res){
 router.get('/getJobList',function(req,res){
     let data = req.query;
     let id = data.id;
-    let Ssql = 'select * from job where company_id = ' + Number(id);
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    jobModel.find({ company_id: id}, (error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let jobInfo = result;
-                conn.release();
-                res.json(jobInfo);
-            }})
-        }})
+        }
+        if (result) {
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    });
 })
 
 router.get('/searchJob',function(req,res){

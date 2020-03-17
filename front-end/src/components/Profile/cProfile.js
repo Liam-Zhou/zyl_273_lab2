@@ -108,7 +108,7 @@ class cProfile extends Component{
     handleBasicSubmit(e){
         e.preventDefault();
         let paramdata = {
-            id: this.state.basic.id,
+            id: this.state.basic._id,
             avatar: e.target.avatar.files[0],
             name: e.target.name.value,
             location: e.target.location.value,
@@ -150,7 +150,7 @@ class cProfile extends Component{
     handleContactSubmit(e){
         e.preventDefault();
         let paramdata = {
-            id: this.state.basic.id,
+            id: this.state.basic._id,
             phone: e.target.phone.value,
             email: e.target.email.value
         }
@@ -185,7 +185,6 @@ class cProfile extends Component{
             redirectVar = <Redirect to= "/login"/>
         }
         let n = this.state.id;
-        n = Number(n);
         let img = require(`../../img/Cuser/${n}`)
 
     return(
