@@ -5,6 +5,7 @@ let fs = require('fs');
 var pool = require('../../config/db');
 let multer=require('multer');
 let jobModel = require('../../Models/JobModel')
+let Student = require('../../Models/StudentModel')
 let Company = require('../../Models/CompanyModel')
 
 var createFolder = function(folder){
@@ -240,136 +241,210 @@ router.post('/applyJob',Fupload.single('file'),function(req,res){
     let data = req.body;
     let today = new Date()
     let year = today.getFullYear();
-    let month = today.getMonth();
+    let month = today.getMonth()+1;
     let day = today.getDate();
     today = year+'-'+month+'-'+day;
 
-    let Sargs = []
-    Ssql = 'select * from stu_job where student_id=? and job_id=?'
-    Sargs.push(data.stu_id);Sargs.push(data.job_id);
-
-    
-    let addSql = 'insert into stu_job (student_id,job_id,status,applied_date) values (?,?,?,?)'
-    let args = [];
-    args.push(data.stu_id);args.push(data.job_id);
-    args.push("pending");args.push(today);
-
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+    jobModel.find({_id: data.job_id},{'stu_list':1}, (error, result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-            conn.query(Ssql,Sargs,function(serr,result){
-                if(serr){
-                    console.log('[ADD ERROR] - ',serr.message);
-                    conn.release();
-                    res.json('mysql select error ')
-                    return
-                }else{
-                        if(result.length!= 0 ){
-                            conn.release();
-                            res.json('you have already applied,file will be updated');
-                        }else{
-                            conn.query(addSql,args,function(qerr,result){
-                                if(qerr){
-                                    console.log('[ADD ERROR] - ',qerr.message);
-                                    conn.release();
-                                    res.json('mysql select error ')
-                                    return
-                                }else{
-                                            conn.release();
-                                            res.json('success');
-                                    }
-                                })
-                        }
-                            
+        }
+        if (result) {
+            let flag = false
+            if(result[0].stu_list.length !== 0){
+                result[0].stu_list.map((stu)=>{
+                    if(stu.student_id == data.stu_id){
+                        flag = true;
                     }
+                })
             }
-            )
-            
-            }})
+            if(flag){
+                res.end('you have already applied,file will be updated');
+            }else{
+                let stu = {
+                    "student_id" : data.stu_id,
+                    "status" : 'pending',
+                    "applied_date" : today,
+                }
+                let set = {
+                    $addToSet : {'stu_list':stu}
+                }
+                jobModel.updateOne({_id: data.job_id},set,(error2,result2) => {
+                    if (error2) {
+                        res.writeHead(500, {
+                            'Content-Type': 'text/plain'
+                        })
+                        res.end("Error Occured");
+                        return;
+                    }
+                    if (result2) {
+                        res.json('success');
+                    }
+                    else {
+                        res.end("no info");
+                    }
+                })
+            }
+        }
+        else {
+            res.end("no info");
+        }
+    });
+
+
 })
 
 router.get('/getStuList',function(req,res){
     let data = req.query;
     let id = data.id;
-    let Ssql = 'select * from stu_job inner join student on stu_job.student_id=student.id where job_id = ' + Number(id);
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+
+    jobModel.find({ _id: id},{'_id':0,'stu_list':1},(error, result) => {
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let jobInfo = result;
-                conn.release();
-                res.json(jobInfo);
-            }})
-        }})
+        }
+        if (result) {
+            let stu_list = result[0].stu_list;
+            let stu_ids = [];
+            stu_list.map((stu)=>{
+                stu_ids.push(stu.student_id)
+            })
+            let returnfield = {
+                '_id':1,
+                'name':1,
+                'email':1
+            }
+            Student.find({'_id':{$all: stu_ids}},returnfield,(error, stulist)=>{
+                if (error) {
+                    console.log('error',error)
+                    res.writeHead(500, {
+                        'Content-Type': 'text/plain'
+                    })
+                    res.end("Error Occured");
+                    return
+                }
+                if(stulist){
+                    let returnlist = [];
+                    let new_stu_list = {};
+                    stu_list.map((stu)=>{
+                        new_stu_list[stu.student_id] = {
+                            'status':stu.status,
+                            'applied_date':stu.applied_date
+                        }
+                    })
+
+                    stulist.map((s)=>{
+                        returnlist.push({
+                            student_id:s._id,
+                            name:s.name,
+                            email:s.email,
+                            status:new_stu_list[s._id].status,
+                            applied_date:new_stu_list[s._id].applied_date
+                        })
+                    })
+                    res.json(returnlist)
+                }
+
+            })
+
+        }
+        else {
+            res.end("no info");
+        }
+    });
 })
 
 router.put('/changeStatus',function(req,res){
     let data = req.body;
-    let updateSql = 'update stu_job SET status=? where student_id=? and job_id=?'
     let args = [];
     args.push(data.status);args.push(data.stu_id);
     args.push(data.job_id);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-            conn.query(updateSql,args,function(qerr,result){
-                if(qerr){
-                    console.log('[ADD ERROR] - ',qerr.message);
-                    conn.release();
-                    res.json('mysql select error ')
-                    return
-                }else{
-                            conn.release();
-                            res.json('success');
-                    }
-                })
-            }})
+    let stu = 'stu_list.'+data.index+'.status'
+    let set = {
+        $set : {[stu]:data.status}
+    }
+    jobModel.updateOne({'_id': data.job_id},set,(error,result) => {
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+            return;
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+
 })
 
 router.get('/searchJobByStatus',function(req,res){
     let data = req.query;
     let stu_id = data.stu_id;
     let status = data.status;
-    let Ssql;
-    let args =[];
-    args.push(stu_id)
-    if(status){
-        Ssql = 'select * from stu_job inner join job on stu_job.job_id=job.id inner join company on job.company_id = company.id where student_id = ? and status = ?' ;
-        args.push(status);
-    }else{
-        Ssql = 'select * from stu_job inner join job on stu_job.job_id=job.id inner join company on job.company_id = company.id where student_id = ?';
+    let match = {
+        $match:{
+            "stu_list.student_id":stu_id,
+        }
     }
+
+    if(status){
+        match = {
+            $match:{
+                "stu_list.student_id":stu_id,
+                "stu_list.status" : status
+            }
+        }
+    }
+    let lookup = {
+        $lookup:
+          {
+            from: "company",
+            localField: "company_id",
+            foreignField: "_id",
+            as: "companyinfo"
+          }
+     };
     
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-        conn.query(Ssql,args,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let jobInfo = result;
-                conn.release();
-                res.json(jobInfo);
-            }})
-        }})
+    jobModel.aggregate([match,lookup],(error, joblist)=>{
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
+        }
+        if (joblist) {
+            joblist.map((job)=>{
+                job.name = job.companyinfo[0].name;
+                for(let i = 0 ; i < job.stu_list.length;i++){
+                    if(job.stu_list[i].student_id == stu_id){
+                        job.status = job.stu_list[i].status;
+                        job.applied_date = job.stu_list[i].applied_date;
+                        continue;
+                    }
+                }
+            })
+            res.json(joblist);
+        }
+        else {
+            res.end("no job list");
+        }
+
+    })
+    
 })
 
 

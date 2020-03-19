@@ -80,6 +80,7 @@ class viewJob extends Component{
         let stu_id = stu.student_id
         let job_id = this.state.job_id_now
         let para = {
+            index:index,//may be bug
             status:status,
             stu_id:stu_id,
             job_id:job_id
@@ -169,7 +170,7 @@ class viewJob extends Component{
                 <table class="table">
                             <thead>
                                 <tr>
-                                    <th>Stu_id</th>
+                                    <th>Applied Date</th>
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Resume</th>
@@ -181,7 +182,7 @@ class viewJob extends Component{
 
                                 {this.state.studentlist.map((stu,index)=>(
                                         <tr>
-                                            <td>{stu.student_id}</td>
+                                            <td>{stu.applied_date}</td>
                                             <td><a onClick = {()=>this.studentProfile(stu.student_id)}>{stu.name}</a></td>
                                             <td>{stu.email}</td>
                                             <td><button onClick={()=>this.checkResume(stu,index)}>check Resume</button></td>

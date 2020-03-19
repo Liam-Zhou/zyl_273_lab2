@@ -72,17 +72,12 @@ class jobSearch extends Component{
     apply(e){
         e.preventDefault();
         let file = e.target.file.files[0]
-        console.log('file',file)
         if(sessionStorage.getItem('user')){
            let stu_id = JSON.parse(sessionStorage.getItem('user')).id;
-           let job_id = this.state.job.id;
-           let param = {
-                stu_id:stu_id,
-                job_id:job_id
-           }
+           let job_id = this.state.job._id;
            let params = new FormData();
-           params.append('stu_id',param.stu_id)
-           params.append('job_id',param.job_id)
+           params.append('stu_id',stu_id)
+           params.append('job_id',job_id)
            params.append('file',file)
 
            axios.defaults.withCredentials = true;
