@@ -1,6 +1,5 @@
 var express = require('express');
 var router = express.Router();
-var pool = require('../../config/db');
 let fs = require('fs');
 let multer=require('multer');
 let Student = require('../../Models/StudentModel')

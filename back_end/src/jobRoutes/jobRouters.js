@@ -1,9 +1,8 @@
 var express = require('express');
 var router = express.Router();
-let qs = require('qs');
 let fs = require('fs');
-var pool = require('../../config/db');
 let multer=require('multer');
+const mongoose = require('mongoose');
 let jobModel = require('../../Models/JobModel')
 let Student = require('../../Models/StudentModel')
 let Company = require('../../Models/CompanyModel')
@@ -59,9 +58,6 @@ var Fupload = multer({ storage: Fstorage })
 //company profile basic data,picture
 router.post('/updatecombasic',upload.single('avatar'),function(req,res){
     let data = req.body;
-    let args = [];
-    args.push(data.name);args.push(data.location);
-    args.push(data.des);args.push(data.id);
 
     let set = {
         $set : {
@@ -92,32 +88,34 @@ router.post('/updatecombasic',upload.single('avatar'),function(req,res){
 
 router.post('/addJob',function(req,res){
     let data = req.body;
-    let addSql = 'insert into job (company_id,jobTitle,postingDate,deadline,location,salary,description,category) values (?,?,?,?,?,?,?,?)'
-    let args = [];
-    args.push(data.id);args.push(data.title);
-    args.push(data.postingDate);args.push(data.deadline);
-    args.push(data.location);args.push(data.salay);
-    args.push(data.description);args.push(data.category);
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
-            return
-        }else{
-            
-                    conn.query(addSql,args,function(qerr,result){
-                        if(qerr){
-                            console.log('[ADD ERROR] - ',qerr.message);
-                            conn.release();
-                            res.json('mysql update error ')
-                            return
-                        }else{
-                            conn.release();
-                            res.json('success');
-                        }
-                    });
-                }
+    let job = {
+        company_id:data.id,
+        jobTitle:data.title,
+        postingDate:data.postingDate,
+        deadline:data.deadline,
+        location:data.location,
+        salary:data.salay,
+        description:data.description,
+        category:data.category
+    }
+    jobModel.insertMany(job,(error,result)=>{
+        if (error) {
+            console.log('error',error)
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
             })
+            res.end("Error Occured");
+            return;
+        }
+        if (result) {
+            res.json('success');
+        }
+        else {
+            res.end("no info");
+        }
+    })
+
 
 })
 
@@ -219,7 +217,6 @@ router.get('/searchJob',function(req,res){
             as: "companyinfo"
           }
      };
-    
     jobModel.aggregate([lookup,match],(error, joblist)=>{
         if (error) {
             res.writeHead(500, {
@@ -364,9 +361,6 @@ router.get('/getStuList',function(req,res){
 
 router.put('/changeStatus',function(req,res){
     let data = req.body;
-    let args = [];
-    args.push(data.status);args.push(data.stu_id);
-    args.push(data.job_id);
 
     let stu = 'stu_list.'+data.index+'.status'
     let set = {
@@ -397,14 +391,14 @@ router.get('/searchJobByStatus',function(req,res){
     let status = data.status;
     let match = {
         $match:{
-            "stu_list.student_id":stu_id,
+            'stu_list.student_id':mongoose.Types.ObjectId(stu_id)
         }
     }
 
     if(status){
         match = {
             $match:{
-                "stu_list.student_id":stu_id,
+                "stu_list.student_id":mongoose.Types.ObjectId(stu_id),
                 "stu_list.status" : status
             }
         }
@@ -418,7 +412,6 @@ router.get('/searchJobByStatus',function(req,res){
             as: "companyinfo"
           }
      };
-    
     jobModel.aggregate([match,lookup],(error, joblist)=>{
         if (error) {
             res.writeHead(500, {

@@ -1,86 +1,96 @@
 var express = require('express');
 var router = express.Router();
-var qs = require('qs');
 var pool = require('../../config/db');
+let Student = require('../../Models/StudentModel')
 
 router.get('/studentList',function(req,res){
     let data = req.query;
     let name = data.name;
     let skill = data.skill;
     let major = data.major;
-    let Ssql = '';
-    let args = [];
-    if(!name&&!major&&!skill){
-        Ssql = 'select * from student'
-    }
-    if(name&&!major&&!skill){
-        Ssql = 'select * from student where (name = ? or collegeName = ?)'
-        args.push(name);args.push(name);
-    }
-    if(!name&&major&&!skill){
-        Ssql = 'select * from education inner join student on student.id = education.student_id where major = ?'
-        args.push(major);
-    }
-    if(!name&&!major&&skill){
-        skill = '%'+skill+'%';
-        Ssql = 'select * from student where skills like ?'
-        args.push(skill);
-    }
-    if(!name&&major&&skill){
-        skill = '%'+skill+'%';
-        Ssql = 'select * from education  inner join student on student.id = education.student_id where major = ? and skills like ?'
-        args.push(major);args.push(skill);
-    }
-    if(name&&major&&!skill){
-        Ssql = 'select * from education  inner join student on student.id = education.student_id where major = ? and (name = ? or collegeName = ?)'
-        args.push(major);args.push(name);args.push(name);
-    }
-    if(name&&!major&&skill){
-        skill = '%'+skill+'%';
-        Ssql = 'select * from student where  skills like ? and (name = ? or collegeName = ?)'
-        args.push(skill);args.push(name);args.push(name);
-    }
-    if(name&&major&&skill){
-        skill = '%'+skill+'%';
-        Ssql = 'select * from education inner join student where (name = ? or collegeName = ?) and major = ? and skills like ?'
-        args.push(name);args.push(name);args.push(major);args.push(skill);
+    let query = {
+        
     }
 
-    pool.getConnection(function(err,conn){
-        if(err){
-            res.json('mysql error');
+
+    if(!name&&!major&&!skill){
+    }
+    if(name&&!major&&!skill){
+        query = {
+            $or:[{'name':name},{'education.collegeName':name}]
+        }
+    }
+    if(!name&&major&&!skill){
+        query = {
+            'education.major':major
+        }
+    }
+    if(!name&&!major&&skill){
+        skill = new RegExp(skill, 'i');
+        query = {
+            skills:skill
+        }
+    }
+    if(!name&&major&&skill){
+        skill = new RegExp(skill, 'i');
+        query = {
+            skills:skill,
+            'education.major':major
+        }
+    }
+    if(name&&major&&!skill){
+        query = {
+            'education.major':major,
+            $or:[{'name':name},{'education.collegeName':name}]
+        }
+    }
+    if(name&&!major&&skill){
+        skill = new RegExp(skill, 'i');
+        query = {
+            skills:skill,
+            $or:[{'name':name},{'education.collegeName':name}]
+        }
+    }
+    if(name&&major&&skill){
+        skill = new RegExp(skill, 'i');
+        query = {
+            skills:skill,
+            'education.major':major,
+            $or:[{'name':name},{'education.collegeName':name}]
+        }
+    }
+    Student.find(query,(error,result)=>{
+        if (error) {
+            res.writeHead(500, {
+                'Content-Type': 'text/plain'
+            })
+            res.end("Error Occured");
             return
-        }else{
-        conn.query(Ssql,args,function(qerr,result){
-            if(qerr){
-                console.log('[SELECT ERROR] - ',qerr.message);
-                conn.release();
-                res.json('mysql select error s')
-                return
-            }else{
-                let stuList = result;
-                stuList = uniq(stuList);
-                conn.release();
-                res.json(stuList);
-            }})
-        }})
+        }
+        if (result) {
+            res.json(result);
+        }
+        else {
+            res.end("no info");
+        }
+    })
 
     })
 
-function uniq(array){
-        let temp = []; 
-        let isuniq = 1;
-        for(let i = 0; i < array.length; i++){
-            for(let j = 0; j < temp.length; j++){
-                if(temp[j].id == array[i].id){
-                    isuniq = 0;
-                }
-            }
-            if(isuniq == 1){
-                temp.push(array[i]);
-            }
-            isuniq=1;
-        }
-        return temp;
-    }
+// function uniq(array){
+//         let temp = []; 
+//         let isuniq = 1;
+//         for(let i = 0; i < array.length; i++){
+//             for(let j = 0; j < temp.length; j++){
+//                 if(temp[j].id == array[i].id){
+//                     isuniq = 0;
+//                 }
+//             }
+//             if(isuniq == 1){
+//                 temp.push(array[i]);
+//             }
+//             isuniq=1;
+//         }
+//         return temp;
+//     }
 module.exports = router

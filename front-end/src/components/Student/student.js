@@ -100,9 +100,11 @@ class Student extends Component{
 
                     {this.state.stulist.map( (stu,index) => (
                     <div class = "education_box" >
-                        <p style = {{}}>Student Id:<h4 class='inline'>{stu.id}</h4></p>
-                        <p style = {{}}>Student Name:<a onClick = {()=>this.studentProfile(stu.id)}><h4 class='inline'>{stu.name}</h4></a></p>
-                        <p style = {{}}>College Name:<h4 class='inline'>{stu.collegeName}</h4></p>
+                        <p style = {{}}>Student Id:<h4 class='inline'>{stu._id}</h4></p>
+                        <p style = {{}}>Student Name:<a onClick = {()=>this.studentProfile(stu._id)}><h4 class='inline'>{stu.name}</h4></a></p>
+                        <p style = {{}}>College Name:{stu.education.map((edu)=>(
+                           <h4 class='inline'> {edu.collegeName}</h4>
+                        ))}</p>
                         <p style = {{}}>Skills:<h4 class='inline'>{stu.skills}</h4></p>
                     </div>
                 ))}
