@@ -1,0 +1,3 @@
+{"_id":{"$oid":"5e6e900b6c1af6291880c38f"},"name":"smarchit","password":"as","email":"smarchit@gmail.com","location":"shanghai","description":"good","phone":"6696663161"}
+{"_id":{"$oid":"5e82ff6d98c5c818771a2e0c"},"__v":0,"name":"google","email":"google@gmail.com","password":"google","location":"sanjose"}
+{"_id":{"$oid":"5e830810737203280229ae05"},"__v":0,"name":"apple","email":"apple@gmail.com","password":"123456","location":"sanjose"}
